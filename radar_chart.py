@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
-font_path = 'simhei.ttf.ttf' 
+font_path = 'simhei.ttf' 
 if os.path.exists(font_path):
     fm.fontManager.addfont(font_path)
     plt.rcParams['font.sans-serif'] = ['simhei']  # 设置全局默认字体为黑体
@@ -34,8 +34,7 @@ def parse_mapping(cfg_str):
             final_map[int(k)] = v
     return final_map
 
-
-# 🌟 完美的兜底配置：如果网页没保存配置，就用这个原版的 9 知识点映射
+如果网页没保存配置，就用这个原版的 9 知识点映射
 DEFAULT_MAPPING = {
     **{i: 1 for i in range(1, 5)},
     **{i: 2 for i in range(5, 15)},
@@ -62,7 +61,7 @@ else:
 Q_COUNT_CFG = max(EXAM_QID_TO_PID.keys()) if EXAM_QID_TO_PID else 35
 KP_COUNT = max(EXAM_QID_TO_PID.values()) if EXAM_QID_TO_PID else 9
 
-KP_LABELS = [f"知识点{i}" for i in range(1, KP_COUNT + 1)]
+KP_LABELS = [f"KP{i}" for i in range(1, KP_COUNT + 1)]
 
 
 def find_sid_col(fieldnames: List[str]) -> str:
