@@ -86,26 +86,38 @@ if menu == "1. 算法引擎训练舱":
     # 逻辑处理：当三个框都有文件时触发
     if total_file and math_file and exam_file:
         try:
-            # --- 核心切分逻辑 ---
+            # --- 核心切分逻辑 (保序且按组切分版) ---
+            total_file.seek(0) 
             df_total = pd.read_csv(total_file)
-            # 随机打乱数据，保证切分后的样本分布均匀
-            df_total = df_total.sample(frac=1, random_state=42).reset_index(drop=True)
-            # 三等分
-            splits = np.array_split(df_total, 3)
-
-            # 分别保存，文件名对应你原本代码的 my_data_train.csv 等
-            splits[0].to_csv(train_path, index=False)
-            splits[1].to_csv(valid_path, index=False)
-            splits[2].to_csv(test_path, index=False)
-
-            # 保存另外两个文件
-            with open(math_path, "wb") as f:
-                f.write(math_file.getbuffer())
-            with open(exam_path, "wb") as f:
-                f.write(exam_file.getbuffer())
+            
+            # 1. 找到学生 ID 列的名称 (容错处理)
+            sid_col = "student_id" if "student_id" in df_total.columns else df_total.columns[0]
+            
+            # 2. 获取所有不重复的学生 ID 列表，并将这些 ID 打乱
+            unique_sids = df_total[sid_col].unique()
+            np.random.seed(42) # 保证每次打乱结果一致
+            np.random.shuffle(unique_sids)
+            
+            # 3. 将打乱后的学生 ID 分成三份
+            splits_sids = np.array_split(unique_sids, 3)
+            
+            # 4. 根据分好的学生 ID，把原本完整的 DataFrame 筛选出来
+            # 这样既保证了切分均匀，又绝对不会破坏同一个学生内部的行顺序！
+            train_df = df_total[df_total[sid_col].isin(splits_sids[0])]
+            valid_df = df_total[df_total[sid_col].isin(splits_sids[1])]
+            test_df  = df_total[df_total[sid_col].isin(splits_sids[2])]
+            
+            # 5. 分别保存为本地文件
+            train_df.to_csv(train_path, index=False)
+            valid_df.to_csv(valid_path, index=False)
+            test_df.to_csv(test_path, index=False)
+            
+            # 6. 保存另外两个文件
+            with open(math_path, "wb") as f: f.write(math_file.getbuffer())
+            with open(exam_path, "wb") as f: f.write(exam_file.getbuffer())
 
             st.session_state.data_loaded = True
-            st.success(f"✅ 数据处理完毕！总计 {len(df_total)} 条，已自动切分为 Train/Valid/Test 三组。")
+            st.success(f"✅ 数据处理完毕！总计 {len(df_total)} 条数据，已按【学生ID】安全切分，完美保留时间顺序！")
         except Exception as e:
             st.error(f"❌ 数据预处理失败：{e}")
 
