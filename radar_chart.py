@@ -4,14 +4,10 @@ import json
 from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
 
-font_path = 'simhei.ttf' 
-if os.path.exists(font_path):
-    fm.fontManager.addfont(font_path)
-    plt.rcParams['font.sans-serif'] = ['simhei']  # 设置全局默认字体为黑体
-    
-plt.rcParams['axes.unicode_minus'] = False
+# 中文显示
+plt.rcParams["font.sans-serif"] = ["SimHei", "Arial Unicode MS", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
 
 INPUT_CSV = "exam_predictions_summary_expected_raw.csv"
 OUT_DIR = "radar_charts"
@@ -34,7 +30,8 @@ def parse_mapping(cfg_str):
             final_map[int(k)] = v
     return final_map
 
-如果网页没保存配置，就用这个原版的 9 知识点映射
+
+# 🌟 完美的兜底配置：如果网页没保存配置，就用这个原版的 9 知识点映射
 DEFAULT_MAPPING = {
     **{i: 1 for i in range(1, 5)},
     **{i: 2 for i in range(5, 15)},
