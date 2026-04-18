@@ -133,7 +133,7 @@ def main():
         # 如果某知识点没题，按 0 分算，绝不跳过
         kp_avg = [kp_sum[i] / kp_cnt[i] if kp_cnt[i] > 0 else 0.0 for i in range(KP_COUNT)]
 
-        title = f"学生 {sid} 知识点掌握度"
+        title = f"Student {sid} Profile"
         out_path = os.path.join(OUT_DIR, f"radar_{sid}.png")
         radar_plot(kp_avg, KP_LABELS, title, out_path)
         n_chart += 1
