@@ -4,10 +4,14 @@ import json
 from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 
-# 中文显示
-plt.rcParams["font.sans-serif"] = ["SimHei", "Arial Unicode MS", "DejaVu Sans"]
-plt.rcParams["axes.unicode_minus"] = False
+font_path = 'simhei.ttf' 
+if os.path.exists(font_path):
+    fm.fontManager.addfont(font_path)
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置全局默认字体为黑体
+    
+plt.rcParams['axes.unicode_minus'] = False
 
 INPUT_CSV = "exam_predictions_summary_expected_raw.csv"
 OUT_DIR = "radar_charts"
