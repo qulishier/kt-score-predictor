@@ -84,40 +84,59 @@ if menu == "1. 算法引擎训练舱":
         exam_file = st.file_uploader("3. 上传预测目标", type=["csv"])
 
     # 逻辑处理：当三个框都有文件时触发
+    # 逻辑处理：当三个框都有文件时触发
     if total_file and math_file and exam_file:
         try:
-            # --- 核心切分逻辑 (保序且按组切分版) ---
-            total_file.seek(0) 
-            df_total = pd.read_csv(total_file)
+            # --- 核心切分逻辑 (专为 "4行/组" 格式定制版) ---
+            import random
             
-            # 1. 找到学生 ID 列的名称 (容错处理)
-            sid_col = "student_id" if "student_id" in df_total.columns else df_total.columns[0]
+            # 1. 将上传的文件按纯文本行读取
+            total_file.seek(0)
+            raw_content = total_file.getvalue().decode('utf-8').splitlines()
             
-            # 2. 获取所有不重复的学生 ID 列表，并将这些 ID 打乱
-            unique_sids = df_total[sid_col].unique()
-            np.random.seed(42) # 保证每次打乱结果一致
-            np.random.shuffle(unique_sids)
+            # 过滤掉末尾可能的空行，防止扰乱行数
+            raw_content = [line for line in raw_content if line.strip() != ""]
             
-            # 3. 将打乱后的学生 ID 分成三份
-            splits_sids = np.array_split(unique_sids, 3)
-            
-            # 4. 根据分好的学生 ID，把原本完整的 DataFrame 筛选出来
-            # 这样既保证了切分均匀，又绝对不会破坏同一个学生内部的行顺序！
-            train_df = df_total[df_total[sid_col].isin(splits_sids[0])]
-            valid_df = df_total[df_total[sid_col].isin(splits_sids[1])]
-            test_df  = df_total[df_total[sid_col].isin(splits_sids[2])]
-            
-            # 5. 分别保存为本地文件
-            train_df.to_csv(train_path, index=False)
-            valid_df.to_csv(valid_path, index=False)
-            test_df.to_csv(test_path, index=False)
-            
-            # 6. 保存另外两个文件
-            with open(math_path, "wb") as f: f.write(math_file.getbuffer())
-            with open(exam_path, "wb") as f: f.write(exam_file.getbuffer())
+            # 2. 严格检查行数是否为 4 的倍数
+            if len(raw_content) % 4 != 0:
+                st.error(f"❌ 数据格式异常：总行数({len(raw_content)})不是4的倍数！请检查原始文件。")
+            else:
+                # 3. 将数据按 4 行一组，打包成“块” (每个块代表一个学生)
+                chunks = []
+                for i in range(0, len(raw_content), 4):
+                    chunks.append(raw_content[i:i+4])
+                
+                # 4. 随机打乱这些学生块
+                random.seed(42) # 保证每次打乱结果一致
+                random.shuffle(chunks)
+                
+                # 5. 三等分这些块
+                n_chunks = len(chunks)
+                split1 = n_chunks // 3
+                split2 = 2 * n_chunks // 3
+                
+                train_chunks = chunks[:split1]
+                valid_chunks = chunks[split1:split2]
+                test_chunks = chunks[split2:]
+                
+                # 6. 定义保存函数：把块重新展平为行写入文件
+                def save_chunks(chunk_list, filepath):
+                    with open(filepath, "w", encoding="utf-8") as f:
+                        for chunk in chunk_list:
+                            for line in chunk:
+                                f.write(line + "\n")
+                                
+                # 7. 悄悄保存为下游代码需要的三个文件，完美骗过 main.py！
+                save_chunks(train_chunks, train_path)
+                save_chunks(valid_chunks, valid_path)
+                save_chunks(test_chunks, test_path)
+                
+                # 8. 保存另外两个成绩文件
+                with open(math_path, "wb") as f: f.write(math_file.getbuffer())
+                with open(exam_path, "wb") as f: f.write(exam_file.getbuffer())
 
-            st.session_state.data_loaded = True
-            st.success(f"✅ 数据处理完毕！总计 {len(df_total)} 条数据，已按【学生ID】安全切分，完美保留时间顺序！")
+                st.session_state.data_loaded = True
+                st.success(f"✅ 数据处理完毕！总计 {n_chunks} 个学生的数据，已完美按“4行一组”打乱并安全切分为三份！")
         except Exception as e:
             st.error(f"❌ 数据预处理失败：{e}")
 
