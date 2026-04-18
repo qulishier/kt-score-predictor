@@ -6,10 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
-font_path = 'simhei.ttf' 
+font_path = 'simhei.ttf.ttf' 
 if os.path.exists(font_path):
     fm.fontManager.addfont(font_path)
-    plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置全局默认字体为黑体
+    plt.rcParams['font.sans-serif'] = ['simhei']  # 设置全局默认字体为黑体
     
 plt.rcParams['axes.unicode_minus'] = False
 
